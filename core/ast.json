@@ -1,0 +1,10 @@
+{
+    "type": "COMMAND",
+    "name": "code",
+    "args": [],
+    "stdin": null,
+    "stdout": null,
+    "stdoutAppend": false,
+    "stderr": null,
+    "stderrAppend": false
+}
