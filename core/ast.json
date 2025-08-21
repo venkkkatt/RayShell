@@ -1,9 +1,7 @@
 {
     "type": "COMMAND",
-    "name": "echo",
-    "args": [
-        "hi"
-    ],
+    "name": "hi",
+    "args": [],
     "stdin": null,
     "stdout": null,
     "stdoutAppend": false,
