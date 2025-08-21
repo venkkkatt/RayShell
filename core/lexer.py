@@ -7,6 +7,7 @@ class TokenType(Enum):
     AND = "AND"
     OR = "OR"
     EQ = "EQ"
+    VAR = "VAR"
     SEMICOLON = "SEMICOLON"
     AMPERSAND = "AMPERSAND"
     APPEND_OUT = "APPEND_OUT"
@@ -20,6 +21,8 @@ class TokenType(Enum):
     EOF = "EOF"
 
 OPERATORS = {
+    # "@": TokenType.VAR,
+    # "$":TokenType.VAR,
     ";":TokenType.SEMICOLON,
     "=": TokenType.EQ,
     "|": TokenType.PIPE,
@@ -137,6 +140,37 @@ class Lexer:
                         buf += ch2
                 self.addToken(TokenType.STRING, buf)
                 buf = ""
+                continue
+
+            if ch in ("@", "$") and self.peekChar() == "{":
+                self.readChar()
+                buf = ""
+                while True:
+                    nextCh = self.readChar()
+                    if nextCh is None:
+                        raise ValueError("Unclosed variable braced!")
+                    if nextCh == "}":
+                        break
+                    buf += nextCh
+                if not buf:
+                    raise ValueError("Variable name expected!")
+                self.addToken(TokenType.VAR, buf)
+                buf = ""
+                continue
+
+            if ch in ("@", "$"):
+                buf = ""
+                line, col = self.lineNo, self.colNo
+                while True:
+                    nextCh = self.peekChar()
+                    if nextCh is not None and (nextCh.isalnum() or nextCh == "_"):
+                        buf += self.readChar()
+                    else:
+                        break
+                if not buf:
+                    raise ValueError("Variable name expected!")
+                self.addToken(TokenType.VAR, buf)
+                buf=""
                 continue
     
             if ch is None:

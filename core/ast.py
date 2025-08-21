@@ -7,6 +7,7 @@ class ASTNodeType(Enum):
     BINARYOP = "BINARYOP"
     ASSIGNMENT = "ASSIGNMENT"
     ASSIGNMENTLIST = "ASSIGNMENTLIST"
+    VARREF = "VARREF"
     SUBSHELL = "SUBSHELL"
     IFNODE = "IFNODE"
     FORNODE = "FORNODE"
@@ -70,6 +71,13 @@ class AssignmentListNode(ASTNode):
     
     def __repr__(self):
         return f"AssignmentListNode({self.assignments})"
+    
+class VarRefNode(ASTNode):
+    def __init__(self, name, quoted):
+        super().__init__(ASTNodeType.VARREF, name=name, quoted=False)
+        self.name = name
+    def __repr__(self):
+         return f"VarRefNode({self.name})"
 
 def saveASTtoJson(node, filename = "ast.json"):
     with open (filename, "w") as f:

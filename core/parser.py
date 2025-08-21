@@ -1,6 +1,6 @@
 from lexer import Lexer, TokenType, Token
 from enum import Enum
-from ast import CommandNode, PipeLineNode, BinaryOpNode, AssignmentNode, AssignmentListNode
+from ast import CommandNode, PipeLineNode, BinaryOpNode, AssignmentNode, AssignmentListNode, VarRefNode
     
 class Parser:
     def __init__(self, tokens):
@@ -120,10 +120,17 @@ class Parser:
                 assignments.append(self.parseAssignment())
             elif self.isRedirection(tok):
                 self.parseRedirection(redir)
+            elif tok.type == TokenType.VAR:
+                self.advance()
+                if cmd is None:
+                    return VarRefNode(tok.value)
+                else:
+                     args.append({"type": "VAR", "name": tok.value})
             elif self.isCommandStart(tok) and cmd is None:
                 cmd = self.advance().value
             elif self.isCommandStart(self.peek()) and cmd is not None:
-                args.append(self.advance().value)
+                tok = self.advance()
+                args.append(tok.value)
             else: 
                 break
 

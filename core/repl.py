@@ -6,7 +6,7 @@ import os, readline
 
 LEXER:bool = True
 PARSER:bool = True
-EXECUTOR:bool = True
+EXECUTOR:bool = False
 
 def repl():
     while True:
