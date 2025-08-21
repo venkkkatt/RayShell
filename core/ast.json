@@ -1,9 +1,11 @@
 {
     "type": "COMMAND",
-    "name": "env",
-    "args": [],
+    "name": "echo",
+    "args": [
+        "hi"
+    ],
     "stdin": null,
-    "stdout": "file.txt",
+    "stdout": null,
     "stdoutAppend": false,
     "stderr": null,
     "stderrAppend": false,

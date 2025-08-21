@@ -1,2 +1,4 @@
 file.txt
 core/ast.json
+__pycache__/
+*.py[cod]
