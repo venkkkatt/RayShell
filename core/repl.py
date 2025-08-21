@@ -28,19 +28,20 @@ def repl():
 
         parser = Parser(tokens)
         ast = parser.parse()
+        if ast is None:
+            continue
         if PARSER:
             parserDebug(ast)
             try:
-                saveASTtoJson(ast, os.path.join(os.getcwd(), "shell/core/ast.json"))
+                saveASTtoJson(ast, os.path.join(os.getcwd(), "core/ast.json"))
             except Exception as e:
                 print(f"exception: {e}")
-
-        if EXECUTOR:
-            executor(ast)
-
-def executor(ast):
-        print("---EXECUTION---")
         ex = Executor()
+        if EXECUTOR:
+            executor(ex, ast)
+
+def executor(ex, ast):
+        print("---EXECUTION---")
         res = ex.run(ast)
         # print(res)
 

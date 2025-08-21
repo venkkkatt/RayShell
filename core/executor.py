@@ -8,6 +8,14 @@ class Executor:
         self.cwd = os.getcwd()
 
     def run(self, node):
+        if node.type.name == "ASSIGNMENT":
+            os.environ[node.name] = node.value or ""
+            return 0
+        elif node.type.name == "ASSIGNMENTLIST":
+            for a in node.assignments:
+                os.environ[a.name] = a.value or ""
+            return 0
+
         if node.type.name == "COMMAND":
             return self.runCommand(node)
         elif node.type.name == "BINARYOP":
@@ -17,27 +25,55 @@ class Executor:
         else:
             raise NotImplementedError(f"Node type {node.type} not yet supported")
         
+    def updateEnv(self, env):
+        os.environ.clear()
+        os.environ.update(env)
+        return env
+    
+    def handleAssignments(self, node):
+        env = os.environ.copy()
+        for assignment in getattr(node, "assignments", []):
+            env [assignment.name] = assignment.value or ""
+        return env
+    
+    def applyRedirections(self, node):
+        if node.stdin:
+            fd = os.open(node.stdin, os.O_RDONLY)
+            os.dup2(fd, 0)
+            os.close(fd)
+        
+        if node.stdout:
+            flags = os.O_WRONLY | os.O_CREAT | (os.O_APPEND if node.stdoutAppend else os.O_TRUNC)
+            fd = os.open(node.stdout, flags, 0o644)
+            os.dup2(fd, 1)
+            os.close(fd)
+
+        if node.stderr:
+            flags = os.O_WRONLY | os.O_CREAT | (os.O_APPEND if node.stderrAppend else os.O_TRUNC)
+            fd = os.open(node.stderr, flags, 0o644)
+            os.dup2(fd, 2)
+            os.close(fd)
+        
     def runCommand(self, node):
         cmd = node.name
         args = node.args
-
+        env = self.handleAssignments(node)
         if cmd in BUILTINS:
-            if node.stdin or node.stdout or node.stderr:
-                self.runBuiltinWithRedir(node)
-            else:
-                out = BuiltinFns(cmd, args).main()
-                return out if out is not None else 0
+            return self.runBuiltin(node, env)
         else:
-            return self.runExternal(node, cmd, args)
-        
-    def runBuiltinWithRedir(self, node):
+            return self.runExternal(node, cmd, args, env)
+    
+    def runBuiltin(self, node, env):
         origStdout = os.dup(1)
         origStderr = os.dup(2)
-
+        origEnv = os.environ.copy()
         try:
-            self.applyRedirections(node)
-            return BuiltinFns(node.name, node.args).main()
+            if node.stdin or node.stdout or node.stderr:
+                self.applyRedirections(node)
+            self.updateEnv(env)
+            return BuiltinFns(node.name, node.args).main() or 0
         finally:
+            self.updateEnv(origEnv)
             os.dup2(origStdout, 1)
             os.dup2(origStderr, 2)
             os.close(origStdout)
@@ -58,14 +94,17 @@ class Executor:
         else:
             raise ValueError("Expecting a binary operator")
         
-    def runExternal(self, node, cmd, args):
+    def runExternal(self, node, cmd, args, env):
         
         pid = libc.fork()
         if pid == 0:
             try:
                 self.applyRedirections(node)
                 argv = self.prepareArgv(cmd, args)
-                libc.execvp(ctypes.c_char_p(cmd.encode()), argv)
+                env_list = [f"{k}={v}".encode() for k, v in env.items()]
+                c_env = (ctypes.c_char_p * (len(env_list)+1))(*env_list, None)
+                libc.execvpe(ctypes.c_char_p(cmd.encode()), argv, c_env)
+
             except FileNotFoundError:
                 print("File not found")
             except Exception as e:
@@ -104,7 +143,7 @@ class Executor:
                     if i != j:
                         os.close(wFd)
                 
-                exitCode = self.run(cmdNode)
+                exitCode = self.runCommand(cmdNode)
                 os._exit(exitCode if exitCode is not None else 0)
             else:
                 pids.append(pid)
@@ -129,22 +168,5 @@ class Executor:
         arrayType = ctypes.c_char_p * (argc + 1)
         cArgv = arrayType(*[ctypes.cast(arg, ctypes.c_char_p) for arg in argv], None)
         return cArgv
-    
-    def applyRedirections(self, node):
-        if node.stdin:
-            fd = os.open(node.stdin, os.O_RDONLY)
-            os.dup2(fd, 0)
-            os.close(fd)
-        
-        if node.stdout:
-            flags = os.O_WRONLY | os.O_CREAT | (os.O_APPEND if node.stdoutAppend else os.O_TRUNC)
-            fd = os.open(node.stdout, flags, 0o644)
-            os.dup2(fd, 1)
-            os.close(fd)
 
-        if node.stderr:
-            flags = os.O_WRONLY | os.O_CREAT | (os.O_APPEND if node.stderrAppend else os.O_TRUNC)
-            fd = os.open(node.stderr, flags, 0o644)
-            os.dup2(fd, 2)
-            os.close(fd)
     

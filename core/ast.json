@@ -1,10 +1,11 @@
 {
     "type": "COMMAND",
-    "name": "code",
+    "name": "env",
     "args": [],
     "stdin": null,
-    "stdout": null,
+    "stdout": "file.txt",
     "stdoutAppend": false,
     "stderr": null,
-    "stderrAppend": false
+    "stderrAppend": false,
+    "assignments": []
 }

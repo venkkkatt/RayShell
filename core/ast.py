@@ -6,6 +6,7 @@ class ASTNodeType(Enum):
     PIPELINE = "PIPELINE"
     BINARYOP = "BINARYOP"
     ASSIGNMENT = "ASSIGNMENT"
+    ASSIGNMENTLIST = "ASSIGNMENTLIST"
     SUBSHELL = "SUBSHELL"
     IFNODE = "IFNODE"
     FORNODE = "FORNODE"
@@ -34,13 +35,14 @@ class ASTNode:
         return result
 
 class CommandNode(ASTNode):
-    def __init__(self, name, args, stdin=None, stdout=None, stdoutAppend=False, stderr=None, stderrAppend=False):
+    def __init__(self, name, args, stdin=None, stdout=None, stdoutAppend=False, stderr=None, stderrAppend=False, assignments=None):
         super().__init__(ASTNodeType.COMMAND, name=name, args=args)
         self.stdin = stdin
         self.stdout = stdout
         self.stdoutAppend = stdoutAppend
         self.stderr = stderr
         self.stderrAppend = stderrAppend
+        self.assignments = assignments
 
 class BinaryOpNode(ASTNode):
     def __init__(self, op, left, right):
@@ -54,6 +56,20 @@ class PipeLineNode(ASTNode):
         super().__init__(ASTNodeType.PIPELINE, name=name, cmds=cmds)
     def __repr__(self):
         return f"PipeLineNode(cmds = {self.cmds})"
+    
+class AssignmentNode(ASTNode):
+    def __init__(self, name, value, export=False):
+        super().__init__(ASTNodeType.ASSIGNMENT, name=name, value=value, export=export)
+    def __repr__(self):
+        return f"AssignmentNode({self.name} = {self.value})"
+
+class AssignmentListNode(ASTNode):
+    def __init__(self, assignments):
+        super().__init__(ASTNodeType.ASSIGNMENTLIST, assignments=assignments)
+        self.assignments = assignments
+    
+    def __repr__(self):
+        return f"AssignmentListNode({self.assignments})"
 
 def saveASTtoJson(node, filename = "ast.json"):
     with open (filename, "w") as f:
