@@ -27,7 +27,7 @@ class Parser:
         return (self.peek().type == TokenType.WORD and self.peekN(1).type == TokenType.EQ)
     
     def isCommandStart(self, tok) -> bool:
-        return tok.type in (TokenType.WORD, TokenType.STRING)
+        return tok.type in (TokenType.WORD, TokenType.STRING, TokenType.DSTRING)
     
     def isRedirection(self, tok) -> bool:
         return tok.type in (
@@ -70,15 +70,21 @@ class Parser:
     def parseAssignment(self):
         varName = self.advance().value
         self.advance()
-        if self.peek().type in (TokenType.WORD, TokenType.STRING):
-            varValue = self.advance().value
+        if self.peek().type in (TokenType.WORD, TokenType.STRING, TokenType.DSTRING):
+            t = self.advance()
+            if t.type == TokenType.STRING:
+                varValue == ("STRING", t.value)
+            if t.type == TokenType.DSTRING:
+                varValue = ("DSTRING", t.value)
+            else:
+                varValue = ("WORD", t.value)
         else:
             varValue = None
         return AssignmentNode(varName, varValue)
     
     def parseRedirection(self, redir):
         tok = self.advance()
-        if self.peek().type not in (TokenType.WORD, TokenType.STRING):
+        if self.peek().type not in (TokenType.WORD, TokenType.STRING, TokenType.DSTRING):
             raise ValueError ("File name required after redirection!")
         
         target = self.advance()
@@ -127,7 +133,14 @@ class Parser:
                 else:
                      args.append({"type": "VAR", "name": tok.value})
             elif self.isCommandStart(tok) and cmd is None:
-                cmd = self.advance().value
+                tok = self.advance()
+                if tok.type == TokenType.STRING:
+                    cmd = ("STRING", tok.value)
+                elif tok.type == TokenType.DSTRING:
+                    cmd = ("DSTRING", tok.value)
+                else: 
+                    cmd = ("WORD", tok.value)
+                print(f"cmd: {cmd}")
             elif self.isCommandStart(self.peek()) and cmd is not None:
                 tok = self.advance()
                 args.append(tok.value)

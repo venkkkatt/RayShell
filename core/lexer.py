@@ -3,6 +3,7 @@ from enum import Enum
 class TokenType(Enum):
     WORD = "WORD"
     STRING = "STRING"
+    DSTRING = "DSTRING"
     PIPE = "PIPE"
     AND = "AND"
     OR = "OR"
@@ -138,7 +139,7 @@ class Lexer:
                         buf += nextCh or ""
                     else:
                         buf += ch2
-                self.addToken(TokenType.STRING, buf)
+                self.addToken(TokenType.DSTRING, buf)
                 buf = ""
                 continue
 

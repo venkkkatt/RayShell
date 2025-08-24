@@ -3,10 +3,11 @@ from parser import Parser
 from executor import Executor
 from ast import saveASTtoJson
 import os, readline
+from expander import Expander
 
 LEXER:bool = True
 PARSER:bool = True
-EXECUTOR:bool = False
+EXECUTOR:bool = True
 
 def repl():
     while True:
@@ -30,13 +31,17 @@ def repl():
         ast = parser.parse()
         if ast is None:
             continue
+       
+        
+        ex = Executor()
+        exp = Expander(ex)
+        ast = exp.expand(ast)
         if PARSER:
             parserDebug(ast)
             try:
-                saveASTtoJson(ast, os.path.join(os.getcwd(), "core/ast.json"))
+                saveASTtoJson(ast, os.path.join("", "/home/venkat/rayshell/core/ast.json"))
             except Exception as e:
                 print(f"exception: {e}")
-        ex = Executor()
         if EXECUTOR:
             executor(ex, ast)
 

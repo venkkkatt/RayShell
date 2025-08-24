@@ -2,13 +2,13 @@
     "type": "COMMAND",
     "name": "echo",
     "args": [
-        "hi",
-        "bye"
+        "hiii",
+        "hi"
     ],
     "stdin": null,
     "stdout": null,
-    "stdoutAppend": false,
+    "stdoutAppend": null,
     "stderr": null,
-    "stderrAppend": false,
+    "stderrAppend": null,
     "assignments": []
 }

@@ -22,6 +22,7 @@ class BuiltinFns:
         return 0
         
     def handle_cd(self):
+        print (self.args)
         target = self.args[0] if self.args else os.getenv("HOME")
         try:
             os.chdir(target)

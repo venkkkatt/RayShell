@@ -73,8 +73,8 @@ class AssignmentListNode(ASTNode):
         return f"AssignmentListNode({self.assignments})"
     
 class VarRefNode(ASTNode):
-    def __init__(self, name, quoted):
-        super().__init__(ASTNodeType.VARREF, name=name, quoted=False)
+    def __init__(self, name):
+        super().__init__(ASTNodeType.VARREF, name=name)
         self.name = name
     def __repr__(self):
          return f"VarRefNode({self.name})"
