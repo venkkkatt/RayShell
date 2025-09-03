@@ -52,7 +52,6 @@ class Expander:
         return AssignmentNode(node.name, expanded[0] if expanded else "")
     
     def _expandArg(self, arg):
-        print(f"arg: {arg}")
         if isinstance(arg, dict) and arg.get("type") == "VAR":
             return self._expandVar(arg["name"])
         
@@ -61,7 +60,6 @@ class Expander:
     def _expandWord(self, word, forAssignment = False):
         if word is None:
             return [""]
-        print(f"word:{word}")
         if isinstance(word, tuple) and word[0] == "STRING":
             return [word[1]]
         
@@ -84,7 +82,6 @@ class Expander:
                 out.extend(matches if matches else [p])
             else:
                 out.append(p)
-        print(f"out: {out}")
         return out
 
     def _expandRedir(self, target):
@@ -165,7 +162,6 @@ class Expander:
             else:
                 out.append(ch)
                 i += 1
-        print(f"outdstring: {"".join(out)}")
         return "".join(out)
             
     def _fieldSplit(self, s:str, ifs:str):

@@ -6,6 +6,7 @@ libc = ctypes.CDLL("libc.so.6")
 class Executor:
     def __init__(self):
         self.cwd = os.getcwd()
+        self.fg_pid = 0
 
     def run(self, node):
         if node.type.name == "ASSIGNMENT":
@@ -56,6 +57,7 @@ class Executor:
         
     def runCommand(self, node):
         cmd = node.name
+        print(f"from executor, node.name = {node.name}")
         args = node.args
         env = self.handleAssignments(node)
         if cmd in BUILTINS:
@@ -99,6 +101,7 @@ class Executor:
         pid = libc.fork()
         if pid == 0:
             try:
+                
                 self.applyRedirections(node)
                 argv = self.prepareArgv(cmd, args)
                 env_list = [f"{k}={v}".encode() for k, v in env.items()]
@@ -113,8 +116,10 @@ class Executor:
             print("type in a real command!")
             os._exit(127)
         else:
+            self.fg_pid = pid
             status = ctypes.c_int()
             libc.waitpid(pid, ctypes.byref(status), 0)
+            self.fg_pid = 0
             return os.WEXITSTATUS(status.value)
     
     def runPipeline(self, node):

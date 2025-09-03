@@ -1,14 +1,11 @@
 {
     "type": "COMMAND",
-    "name": "echo",
-    "args": [
-        "hiii",
-        "hi"
-    ],
+    "name": "hi",
+    "args": [],
     "stdin": null,
     "stdout": null,
-    "stdoutAppend": null,
+    "stdoutAppend": false,
     "stderr": null,
-    "stderrAppend": null,
+    "stderrAppend": false,
     "assignments": []
 }

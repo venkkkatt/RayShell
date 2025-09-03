@@ -73,7 +73,7 @@ class Parser:
         if self.peek().type in (TokenType.WORD, TokenType.STRING, TokenType.DSTRING):
             t = self.advance()
             if t.type == TokenType.STRING:
-                varValue == ("STRING", t.value)
+                varValue = ("STRING", t.value)
             if t.type == TokenType.DSTRING:
                 varValue = ("DSTRING", t.value)
             else:
@@ -140,7 +140,6 @@ class Parser:
                     cmd = ("DSTRING", tok.value)
                 else: 
                     cmd = ("WORD", tok.value)
-                print(f"cmd: {cmd}")
             elif self.isCommandStart(self.peek()) and cmd is not None:
                 tok = self.advance()
                 args.append(tok.value)
