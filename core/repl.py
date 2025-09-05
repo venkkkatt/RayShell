@@ -15,25 +15,25 @@ def runScript(file_path: str):
     try:
         with open(file_path, 'r') as f:
             # for line in f:
-                line = f.read()
+            line = f.read()
                 
-                lexer = Lexer(line=line)
+            lexer = Lexer(line=line)
                 
-                tokens = lexer.nextToken()
-                if LEXER:
-                    lexerDebug(tokens)
-                parser = Parser(tokens)
-                ast = parser.parse()
-                if PARSER:
-                    parserDebug(ast)
-                if ast:
-                    exp = Expander(ex)
-                    ast = exp.expand(ast)
-                    executor(ex, ast)
+            tokens = lexer.nextToken()
+            if LEXER:
+                lexerDebug(tokens)
+            parser = Parser(tokens)
+            ast = parser.parse()
+            if PARSER:
+                parserDebug(ast)
+            if ast:
+                exp = Expander(ex)
+                ast = exp.expand(ast)
+                executor(ex, ast)
     except FileNotFoundError:
-        print(f"Error: Script file not found at {file_path}")
+        raise FileNotFoundError(f"Error: Script file not found at {file_path}")
     except Exception as e:
-        print(f"Error executing script: {e}")
+        raise Exception(f"Error executing script: {e}")
 
 def repl():
    
@@ -50,8 +50,11 @@ def repl():
             print("bye-bye")
             break
 
-        if line.startswith("./") and os.path.isfile(line):
-            runScript(line)
+        if line.startswith("./") :
+            try:
+                runScript(line)
+            except FileNotFoundError as e:
+                print(e)
             continue
         
         lexer= Lexer(line=line)

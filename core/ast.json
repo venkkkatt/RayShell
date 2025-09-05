@@ -1,7 +1,9 @@
 {
     "type": "COMMAND",
-    "name": "hi",
-    "args": [],
+    "name": "ls",
+    "args": [
+        "venkat"
+    ],
     "stdin": null,
     "stdout": null,
     "stdoutAppend": false,

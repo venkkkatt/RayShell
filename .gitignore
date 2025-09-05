@@ -1,7 +1,7 @@
 file.txt
-core/ast.json
 **/__pycache__/
 *.py[cod]
 pyproject.toml
 __init__.py
 test/*
+ast.json
