@@ -1,13 +1,15 @@
-import os
+import os, signal
 
 BUILTINS = {
-    "cd", "pwd", "echo", "jump", "cwd", "disp", "print", "hi"
+    "cd", "pwd", "echo", "jump", "cwd", "disp", "print", "hi","jobs", "fg","bg", "tenet"
 }
 
 class BuiltinFns:
-    def __init__(self, cmd, args):
+    def __init__(self, cmd, args, ex):
         self.cmd = cmd
         self.args = args
+        self.ex = ex
+
     def __repr__(self):
         return f"{self.cmd}, {self.args}"
     def main(self):
@@ -19,6 +21,14 @@ class BuiltinFns:
             return self.handle_echo()
         if self.cmd == "hi":
             return self.handle_hi()
+        if self.cmd == "jobs":
+            return self.handle_jobs()
+        if self.cmd == "fg":
+            return self.handle_fg()
+        if self.cmd == "bg":
+            return self.handle_bg()
+        if self.cmd == "tenet":
+            return self.handle_tenet()
         return 0
         
     def handle_cd(self):
@@ -46,3 +56,53 @@ class BuiltinFns:
         # print(" ".join(self.args))
         return 0
         
+    def handle_jobs(self):
+        jt = self.ex.jobTable
+        for idx, job in enumerate(jt.list(), start=1):
+            print(f"[{idx}] {job.status}\t{job.cmd}")
+        return 0
+
+    def handle_fg(self):
+        jt = self.ex.jobTable
+        if not jt.list():
+            print("fg: no current job")
+            return 1
+        idx = int(self.args[0][1:]) if self.args else len(jt.list())
+        job = jt.get_by_index(idx) 
+        if not job:
+            print(f"fg: {idx}: no such job")
+            return 1
+
+        os.tcsetpgrp(self.ex.tty_fd, job.pgid)
+        os.killpg(job.pgid, signal.SIGCONT)
+        self.ex.fg_pgid = job.pgid
+
+        for pid in job.pids:
+            _, status = os.waitpid(pid, os.WUNTRACED)
+            if os.WIFSTOPPED(status):
+                job.status = 'stopped'
+            elif os.WIFEXITED(status) or os.WIFSIGNALED(status):
+                self.ex.jobTable.remove(job.pgid)
+
+        self.ex.fg_pgid = 0
+        os.tcsetpgrp(self.ex.tty_fd, os.getpgrp())
+        return 0
+    
+    def handle_bg(self):
+        jt = self.ex.jobTable
+        if not jt.list():
+            print("bg: no current job")
+            return 1
+        idx = int(self.args[0][1:]) if self.args else len(jt.list())
+        job = jt.get_by_index(idx)
+        if not job:
+            print(f"bg: {idx}: no such job")
+            return 1
+
+        os.killpg(job.pgid, signal.SIGCONT)
+        job.status = 'running'
+        print(f"[{job.pgid}] {job.cmd} &")
+        return 0
+    
+    def handle_tenet(self):
+        pass

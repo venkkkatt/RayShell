@@ -4,3 +4,4 @@ core/ast.json
 *.py[cod]
 pyproject.toml
 __init__.py
+test/*

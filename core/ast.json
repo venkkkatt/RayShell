@@ -7,5 +7,6 @@
     "stdoutAppend": false,
     "stderr": null,
     "stderrAppend": false,
-    "assignments": []
+    "assignments": [],
+    "background": false
 }

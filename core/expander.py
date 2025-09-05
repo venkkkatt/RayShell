@@ -14,7 +14,7 @@ class Expander:
             case "COMMAND":
                 return self._expandCommand(node)
             case "PIPELINE":
-                return PipeLineNode("PIPELINE", [self.expand(c) for c in node.cmds])
+                return PipeLineNode("PIPELINE", [self.expand(c) for c in node.cmds], node.background)
             case "BINARYOP":
                 return BinaryOpNode(node.op, self.expand(node.left), self.expand(node.right))
             case "ASSIGNMENT":
@@ -42,7 +42,8 @@ class Expander:
             stderr=self._expandRedir(node.stderr),
             stdoutAppend=node.stdoutAppend,
             stderrAppend=node.stderrAppend,
-            assignments=expandedAssignments
+            assignments=expandedAssignments,
+            background=node.background
         )
     
     def _expandAssignment(self,node:AssignmentNode) -> AssignmentNode:
