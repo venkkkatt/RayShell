@@ -2,6 +2,7 @@ from enum import Enum
 import json
 
 class ASTNodeType(Enum):
+    BLOCK = "BLOCK"
     COMMAND = "COMMAND"
     PIPELINE = "PIPELINE"
     BINARYOP = "BINARYOP"
@@ -10,7 +11,6 @@ class ASTNodeType(Enum):
     VARREF = "VARREF"
     SUBSHELL = "SUBSHELL"
     IF = "IF"
-    BLOCK = "BLOCK"
     WHILE = "WHILE"
     FOR = "FOR"
     CASE = "CASE"
@@ -99,8 +99,6 @@ class IfNode(ASTNode):
         self.alternative = alternative
     def __repr__(self):
         return f"IfNode(condition={self.condition}, consequent={self.consequent} alternative={self.alternative})"
-
-
 
 def saveASTtoJson(node, filename = "ast.json"):
     with open (filename, "w") as f:

@@ -1,6 +1,6 @@
-from lexer import Lexer, TokenType, Token
+from core.lexer import Lexer, TokenType, Token
 from enum import Enum
-from ast import CommandNode, PipeLineNode, BinaryOpNode, AssignmentNode, AssignmentListNode, VarRefNode, IfNode, BlockNode
+from core.ast import CommandNode, PipeLineNode, BinaryOpNode, AssignmentNode, AssignmentListNode, VarRefNode, IfNode, BlockNode
     
 class Parser:
     def __init__(self, tokens):
@@ -237,9 +237,9 @@ class Parser:
                 alternative = self.parseIf()
             elif self.peek().value == "else":
                 self.advance()
-                if self.peek().type != TokenType.ARROW:
-                    raise SyntaxError(f"Expected '->' after else, line={tok.line} col={tok.col}")
-                self.advance()
+                # if self.peek().type != TokenType.ARROW:
+                #     raise SyntaxError(f"Expected '->' after else, line={tok.line} col={tok.col}")
+                # self.advance()
                 alternative = self.parseBlock()
         return IfNode(condition=condition, consequent=consequent, alternative=alternative)
 

@@ -1,7 +1,7 @@
-import os, signal
+import os, signal, readline
 
 BUILTINS = {
-    "cd", "pwd", "echo", "jump", "cwd", "disp", "print", "hi","jobs", "fg","bg", "tenet"
+    "cd", "pwd", "echo", "jump", "cwd", "disp", "print", "hi","jobs", "fg","bg", "tenet","history"  
 }
 
 class BuiltinFns:
@@ -9,6 +9,7 @@ class BuiltinFns:
         self.cmd = cmd
         self.args = args
         self.ex = ex
+        self.narrativeEngine = None
 
     def __repr__(self):
         return f"{self.cmd}, {self.args}"
@@ -29,10 +30,13 @@ class BuiltinFns:
             return self.handle_bg()
         if self.cmd == "tenet":
             return self.handle_tenet()
+        if self.cmd == "history":
+            return self.handle_history()
         return 0
         
     def handle_cd(self):
-        print (self.args)
+        # if self.cmd == "cd":
+            # print("this isn't bash mate, type 'jump' from here on")
         target = self.args[0] if self.args else os.getenv("HOME")
         try:
             os.chdir(target)
@@ -42,6 +46,13 @@ class BuiltinFns:
         except Exception as e:
             print(f"cd: {e}")
             return 1
+        
+    def handle_history(self):
+        historyLen = readline.get_current_history_length()
+        if historyLen > 0:
+            for i in range(1, historyLen + 1):
+                print(f"{i:4} {readline.get_history_item(i)}")
+            return 0
         
     def handle_hi(self):
         print("hey, I don't talk much. I just execute commands.")

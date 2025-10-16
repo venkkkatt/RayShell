@@ -70,15 +70,6 @@ class Token:
     def __repr__(self):
         return (f"{self.type}, Value: {self.value}, Line:{self.line} Col:{self.col}")
     
-# class Lexer:
-#     def __init__(self, line):
-#         self.line = line
-#         self.length = len(line)
-#         self.pos = 0
-#         self.lineNo = 1
-#         self.colNo = 0
-#         self.tokens = []
-    
 class Lexer:
     def __init__(self, line):
         self.line = line

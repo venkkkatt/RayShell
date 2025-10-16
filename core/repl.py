@@ -1,17 +1,20 @@
-from lexer import Lexer
-from parser import Parser
-from executor import Executor
-from ast import saveASTtoJson
-import os, readline, signal
-from expander import Expander
+from core.lexer import Lexer
+from core.parser import Parser
+from core.executor import Executor
+from core.ast import saveASTtoJson
+import os, readline, signal, sys
+from core.expander import Expander
+from core.narrative import NarrativeEngine
 
-LEXER:bool = True
-PARSER:bool = True
+HISTORYFILE = os.path.expanduser("~/.rayshell_history")
+
+LEXER:bool = False
+PARSER:bool = False
 EXECUTOR:bool = True
 ex = Executor()
 
 def runScript(file_path: str):
-    print(f"\n---EXECUTING SCRIPT: {file_path}---")
+    # print(f"\n---EXECUTING SCRIPT: {file_path}---")
     try:
         with open(file_path, 'r') as f:
             # for line in f:
@@ -35,55 +38,71 @@ def runScript(file_path: str):
     except Exception as e:
         raise Exception(f"Error executing script: {e}")
 
-def repl():
-   
-    while True:
-        try:
-            line = input("rayshell> ")
-        except EOFError:
-            break
-        except KeyboardInterrupt:
-            print()
-            continue
+def repl(cmd: str = None):
 
-        if line.strip() in ("bye","exit"):
-            print("bye-bye")
-            break
+    loadHistory()
 
-        if line.startswith("./") :
+    if len(sys.argv) > 1 and sys.argv[1] == "-c":
+        runOnce(" ".join(sys.argv[2:]))
+    else:
+        while True:
             try:
-                runScript(line)
-            except FileNotFoundError as e:
-                print(e)
-            continue
+                line = input("rayshell>")
+                saveHistory()
+
+            except EOFError:
+                saveHistory()
+                break
+            except KeyboardInterrupt:
+                print()
+                continue
+
+            if line.strip() in ("bye","exit"):
+                print("bye-bye")
+                break
+
+            if line.startswith("./") :
+                try:
+                    runScript(line)
+                except FileNotFoundError as e:
+                    print(e)
+                continue
+
+            lexer= Lexer(line=line)
+            tokens = lexer.nextToken()
+            if LEXER:
+                lexerDebug(tokens)
+
+            parser = Parser(tokens)
+            try:
+                ast = parser.parse()
+                if ast is None:
+                    continue
+            except SyntaxError as e:
+                print(f"SyntaxError {e}")
+                continue
+
+            for job in ex.jobTable.list():
+                print(job.pgid, job.status, job.cmd)
         
-        lexer= Lexer(line=line)
-        tokens = lexer.nextToken()
-        if LEXER:
-            lexerDebug(tokens)
-
-        parser = Parser(tokens)
-        ast = parser.parse()
-        if ast is None:
-            continue
-
-        for job in ex.jobTable.list():
-            print(job.pgid, job.status, job.cmd)
-       
-        exp = Expander(ex)
-        ast = exp.expand(ast)
-        if PARSER:
-            parserDebug(ast)
-            
-        if EXECUTOR:
-            executor(ex, ast)
+            exp = Expander(ex)
+            ast = exp.expand(ast)
+            if PARSER:
+                parserDebug(ast)
+                
+            if EXECUTOR:
+                try:
+                    executor(ex, ast)
+                except SyntaxError as e:
+                    print(f"SyntaxError {e}")
+                    continue
+    saveHistory()
 
 def executor(ex, ast):
-        print("\n---EXECUTION---")
-        res = ex.run(ast)
-        return res
+        # print("\n---EXECUTION---")
+        ex.run(ast)
 
-def runOnce(cmd: str):
+def runOnce(cmd: str = None):
     if not cmd.strip():
         return None
     
@@ -108,7 +127,16 @@ def parserDebug(ast):
         saveASTtoJson(ast, os.path.join("", "/home/venkat/rayshell/core/ast.json"))
     except Exception as e:
         print(f"exception: {e}")
-    print(ast)
+
+def loadHistory():
+    if os.path.exists(HISTORYFILE):
+        readline.read_history_file(HISTORYFILE)
+
+def saveHistory():
+    try:
+        readline.write_history_file(HISTORYFILE)
+    except Exception as e:
+        print(f"error writing history {e}")
 
 if __name__ == "__main__":
     repl()

@@ -1,5 +1,5 @@
 import os, glob
-from ast import CommandNode, PipeLineNode, BinaryOpNode, AssignmentNode, AssignmentListNode, VarRefNode
+from core.ast import CommandNode, PipeLineNode, BinaryOpNode, AssignmentNode, AssignmentListNode, VarRefNode
 
 class Expander:
     def __init__(self, executor):

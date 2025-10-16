@@ -1,6 +1,6 @@
 import subprocess, os, ctypes, signal
-from shellBuiltins import BUILTINS, BuiltinFns
-from jobs import Job, JobTable
+from core.shellBuiltins import BUILTINS, BuiltinFns
+from core.jobs import Job, JobTable
 
 libc = ctypes.CDLL("libc.so.6")
 
@@ -14,6 +14,7 @@ class Executor:
         signal.signal(signal.SIGINT, self.sigintHandler)
         signal.signal(signal.SIGTSTP, self.sigstopHandler)
         signal.signal(signal.SIGCHLD, self.sigchldHandler)
+        self.narrativeEngine = None
 
     def sigintHandler(self, signum, frame):
         if self.fg_pgid != 0:
@@ -129,7 +130,10 @@ class Executor:
             if node.stdin or node.stdout or node.stderr:
                 self.applyRedirections(node)
             self.updateEnv(env)
-            return BuiltinFns(cmd, node.args, self).main() or 0
+            builtin_instance = BuiltinFns(cmd, node.args, self)
+            builtin_instance.narrativeEngine = self.narrativeEngine
+            return builtin_instance.main() or 0
+            # return BuiltinFns(cmd, node.args, self).main() or 0
         finally:
             self.updateEnv(origEnv)
             os.dup2(origStdout, 1)
@@ -354,15 +358,5 @@ class Executor:
 
     def runCase():
         pass
-        
-    def runScript():
-        pass
-
-    # def prepareArgv(self, cmd, args):
-    #     argv = [ctypes.create_string_buffer(s.encode()) for s in [cmd] + args]
-    #     argc = len(argv)
-    #     arrayType = ctypes.c_char_p * (argc + 1)
-    #     cArgv = arrayType(*[ctypes.cast(arg, ctypes.c_char_p) for arg in argv], None)
-    #     return cArgv
 
     
