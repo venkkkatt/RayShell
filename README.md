@@ -1,6 +1,9 @@
 Rayshell — Command Execution and Scripting Language
 =
 
+<img width="2880" height="1800" alt="screenshot-20251016-192340" src="https://github.com/user-attachments/assets/dd3bed40-91a0-4bf5-b3be-6b1ba22eaf53" />
+
+
 Rayshell is a shell scripting language built for command execution, and system scripting.<br>
 It combines a clean syntax, strong control flow, and native system integration to deliver a fast, reliable scripting environment.
 
