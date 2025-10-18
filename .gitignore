@@ -11,3 +11,7 @@ ast.json
 /nlp
 state
 rayshell.spec
+core/narrative.py
+temp
+/executables/tenet
+rayshell2.spec

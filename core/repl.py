@@ -4,7 +4,6 @@ from core.executor import Executor
 from core.ast import saveASTtoJson
 import os, readline, signal, sys
 from core.expander import Expander
-from core.narrative import NarrativeEngine
 
 HISTORYFILE = os.path.expanduser("~/.rayshell_history")
 

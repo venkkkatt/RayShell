@@ -1,8 +1,13 @@
-import os, signal, readline
+import os, signal, readline,subprocess
+from datetime import datetime, timedelta
 
 BUILTINS = {
-    "cd", "pwd", "echo", "jump", "cwd", "disp", "print", "hi","jobs", "fg","bg", "tenet","history"  
+    "cd", "pwd", "echo", "jump", "cwd", "disp", "print", "hi","jobs", "fg","bg","history"  
 }
+
+BTRFS_PARTITION = "/dev/vda1"
+HOME_SUBVOL = "/home"
+SNAPSHOT_MOUNT = "/mnt/tenet"
 
 class BuiltinFns:
     def __init__(self, cmd, args, ex):
@@ -28,8 +33,6 @@ class BuiltinFns:
             return self.handle_fg()
         if self.cmd == "bg":
             return self.handle_bg()
-        if self.cmd == "tenet":
-            return self.handle_tenet()
         if self.cmd == "history":
             return self.handle_history()
         return 0
@@ -114,6 +117,3 @@ class BuiltinFns:
         job.status = 'running'
         print(f"[{job.pgid}] {job.cmd} &")
         return 0
-    
-    def handle_tenet(self):
-        pass
