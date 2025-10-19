@@ -21,6 +21,40 @@
 
 static long target_seconds_ago = 0;
 
+void strrev(char *str) {
+    int len = strlen(str);
+    for (int i = 0; i < len / 2; i++) {
+        char temp = str[i];
+        str[i] = str[len - i - 1];
+        str[len - i - 1] = temp;
+    }
+}
+
+static int isEphemeral() {
+    FILE *fp;
+    char buffer[128];
+    int result = 0;
+    
+    const char *cmd = "findmnt -n -o FSTYPE / | head -n 1";
+
+    fp = popen(cmd, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "ERROR: popen failed to execute 'findmnt' for isEphemeral check.\n");
+        return 0; 
+    }
+
+    if (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        buffer[strcspn(buffer, "\n")] = 0; 
+        
+        if (strcmp(buffer, "overlay") == 0) {
+            result = 1; 
+        }
+    }
+
+    pclose(fp);
+    return result;
+}
+
 void generateTimestamp(char *buffer) {
     time_t timer;
     struct tm *tm_info;
@@ -157,7 +191,7 @@ static int findBestSnapshot(char *best_snapshot_name, size_t buflen) {
 
 }
 
-static int write_flag_atomic(const char *content) {
+static int writeFlagAtomic(const char *content) {
     unlink(TEMP_FLAG_FILE_PATH);
     int fd = open(TEMP_FLAG_FILE_PATH, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0) {
@@ -194,14 +228,13 @@ int main(int argc, char *argv[]) {
     char best_snapshot_rw[MAX_SNAPNAME];
     char flag_content[256];
     char confirm[32];
+    char rollback_mode[32]; 
     char cmd_buffer[MAX_CMD_LEN];
 
-    // char timestamp[32];
-    // char snapshot_name[64];
-    // char snapshot_full_path[128];
-    // char flag_content[128];
-    // char cmd_buffer[256];
-    // FILE *fp;
+    if (isEphemeral()) {
+        fprintf(stderr, "ERROR: 'tenet' is not available in Ephemeral mode.\n");
+        return 1;
+    }
 
     if (getuid() != 0) {
         fprintf(stderr, "ERROR: 'tenet' must be run with root privileges (e.g., 'sudo tenet').\n");
@@ -209,22 +242,27 @@ int main(int argc, char *argv[]) {
     }
 
     if (argc != 2) {
-        fprintf(stderr, "Usage: tenet <time_offset>\nExample: tenet -2h (travel back 2 hours in time.)\n");
+        fprintf(stderr, "Usage: tenet <time_offset>\nExample: tenet -2h (travel back 2 hours in time.)\nTenet is a command which helps you travel back in time to a specific point.\n");
         return 1;
     }
 
     if (parseTimeArg(argv[1]) != 0) 
         return 1;
     
-    printf("What's happened is happened! The system is now traversing backwards...");
+    printf("What's happened is happened! The system is preparing to travel backwards...");
 
-    printf("Targeting: %ld seconds ago.\n", target_seconds_ago);
+    printf("Travelling back %ld seconds.\n", target_seconds_ago);
 
     if(findBestSnapshot(best_snapshot_ro, sizeof(best_snapshot_ro)) != 0) {
         return 1;
     }
 
-    printf("1. Entering the time reversal machine. %s", best_snapshot_ro);
+    char reverseBest[MAX_SNAPNAME];
+    strncpy(reverseBest, best_snapshot_ro, sizeof(reverseBest));
+    reverseBest[sizeof(reverseBest) - 1] = '\0';
+    strrev(reverseBest);
+    printf("1. Entering the time reversal machine. %s\n", best_snapshot_ro);
+    printf("%s enihcam lasrever emit eht gniretnE .1\n", reverseBest);
 
     if(strlen(best_snapshot_ro) + 3 >= MAX_SNAPNAME) {
         fprintf(stderr, "ERROR: Snapshot name too long for -rw suffix.");
@@ -232,7 +270,8 @@ int main(int argc, char *argv[]) {
     }
     snprintf(best_snapshot_rw, sizeof(best_snapshot_rw), "%.*s-rw",(int)(sizeof(best_snapshot_rw) - 4), best_snapshot_ro);
 
-    printf("2. Creating the writable copy %s", best_snapshot_rw);
+    printf("2. Creating the writable copy %s\n", best_snapshot_rw);
+
 
     snprintf(cmd_buffer, sizeof(cmd_buffer), "btrfs subvolume snapshot %s/%.17s %s/%.21s", 
              SNAPSHOT_PATH_PREFIX, best_snapshot_ro, 
@@ -243,20 +282,45 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    snprintf(flag_content, sizeof(flag_content), "%s", best_snapshot_rw);
+    printf("\n3. Select Time Traversal Mode:\n");
+    printf("   (P)ermanent Rollback: This past state becomes the new future. You cannot come back to the present!\n");
+    printf("   (O)ne-Time Visit: Visit the past, changes are discarded on next shutdown. You come back to the present after reboot.\n");
+    printf("   Mode (p/o)?: ");
 
-    printf("3) Setting rollback flag at: %s\n", FLAG_FILE_PATH);
+    if (!fgets(rollback_mode, sizeof(rollback_mode), stdin)) {
+        fprintf(stderr, "No input for traversal mode. Aborting.\n");
+        return 1;
+    }
+
+    rollback_mode[strcspn(rollback_mode, "\n")] = 0;
+
+    if (rollback_mode[0] == 'O' || rollback_mode[0] == 'o') {
+        snprintf(flag_content, sizeof(flag_content), "ONETIME:%s", best_snapshot_rw);
+        printf("   [INFO] Traversal set to ONE-TIME VISIT.\n");
+    } else {
+        snprintf(flag_content, sizeof(flag_content), "%s", best_snapshot_rw);
+        printf("   [INFO] Traversal set to be PERMANENT. Erasing the present!\n");
+    }
+
+    printf("4) Turning on the time reversal machine: %s\n", FLAG_FILE_PATH);
     printf("   Flag content: %s\n", flag_content);
 
-    if (write_flag_atomic(flag_content) != 0) {
+    if (writeFlagAtomic(flag_content) != 0) {
         fprintf(stderr, "ERROR: Could not write rollback flag atomically.\n");
         return 1;
     }
 
     printf("\n------------------------------------------------\n");
-    printf("System will boot into Writable snapshot: %s\n", best_snapshot_rw);
+    char reverseBrw[MAX_SNAPNAME];
+    strncpy(reverseBrw, best_snapshot_rw, sizeof(reverseBrw));
+    reverseBrw[sizeof(reverseBrw) - 1] = '\0';
+    strrev(reverseBrw);
+    printf("%s  :kcab gnisrevart won si metsyS\n", reverseBrw);
+    printf("System is now traversing back: %s\n", best_snapshot_rw);
+
     printf("------------------------------------------------\n");
-    printf("Reboot now to activate rollback? (Y/n): ");
+    printf("\n:(n/Y) ? etavitca ot won TOOBER\n");
+    printf("REBOOT now to activate ? (Y/n): ");
     
     if (!fgets(confirm, sizeof(confirm), stdin)) {
         fprintf(stderr, "No input. Aborting.\n");
@@ -266,14 +330,25 @@ int main(int argc, char *argv[]) {
     if (confirm[0] == 'Y' || confirm[0] == 'y' || confirm[0] == '\n') {
         printf("Rebooting system now...\n");
         sync();
+        sync();
         sleep(1);
-        if (executeCmd("trinity reboot") != 0) {
-            fprintf(stderr, "ERROR: reboot command failed. Please reboot manually.\n");
-            return 1;
+        sync();
+        sleep(1);
+
+        if (access("/usr/sbin/trinity", X_OK) == 0) {
+            if (executeCmd("trinity reboot") != 0) {
+                fprintf(stderr, "ERROR: trinity reboot command failed. Please reboot manually.\n");
+                return 1;
+            }
+        } else {
+            fprintf(stderr, "WARNING: /usr/sbin/trinity not found, using fallback reboot.\n");
+            if (executeCmd("reboot") != 0 && executeCmd("systemctl reboot") != 0) {
+                fprintf(stderr, "ERROR: reboot failed. Please reboot manually.\n");
+                return 1;
+            }
         }
     } else {
         printf("Rollback flag set. Reboot manually to activate.\n");
     }
-
     return 0;
 }
