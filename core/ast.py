@@ -99,6 +99,14 @@ class IfNode(ASTNode):
         self.alternative = alternative
     def __repr__(self):
         return f"IfNode(condition={self.condition}, consequent={self.consequent} alternative={self.alternative})"
+    
+class WhileNode(ASTNode):
+    def __init__(self, condition, body):
+        super().__init__(ASTNodeType.WHILE, condition=condition, body=body) 
+        self.condition = condition
+        self.body = body
+    def __repr__(self):
+        return f"WhileNode(condition={self.condition}, body={self.body})"
 
 def saveASTtoJson(node, filename = "ast.json"):
     with open (filename, "w") as f:

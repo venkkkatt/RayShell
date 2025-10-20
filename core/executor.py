@@ -18,13 +18,20 @@ class Executor:
 
     def sigintHandler(self, signum, frame):
         if self.fg_pgid != 0:
-            os.killpg(self.fg_pgid, signal.SIGINT)
+            try:
+                os.killpg(self.fg_pgid, signal.SIGINT)
+            except ProcessLookupError:
+                pass
+
         else:
             print("\nrayshell> ", end="", flush=True)
 
     def sigstopHandler(self, signum, frame):
         if self.fg_pgid != 0:
-            os.killpg(self.fg_pgid, signal.SIGTSTP)
+            try:
+                os.killpg(self.fg_pgid, signal.SIGTSTP)
+            except ProcessLookupError:
+                pass  
         else:
             print("\nrayshell> ", end="", flush=True)
 
@@ -353,8 +360,17 @@ class Executor:
     def runFor():
         pass
 
-    def runWhile():
-        pass
+    def runWhile(self, node):
+        lastStatus = 0
+        while True:
+            conditionStatus = self.run(node.condition)
+
+            if conditionStatus != 0:
+                break
+
+            lastStatus = self.run(node.body)
+
+        return lastStatus
 
     def runCase():
         pass

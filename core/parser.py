@@ -1,6 +1,6 @@
 from core.lexer import Lexer, TokenType, Token
 from enum import Enum
-from core.ast import CommandNode, PipeLineNode, BinaryOpNode, AssignmentNode, AssignmentListNode, VarRefNode, IfNode, BlockNode
+from core.ast import CommandNode, PipeLineNode, BinaryOpNode, AssignmentNode, AssignmentListNode, VarRefNode, IfNode, BlockNode, WhileNode
     
 class Parser:
     def __init__(self, tokens):
@@ -293,7 +293,27 @@ class Parser:
         pass
 
     def parseWhile(self):
-        pass
+        tok = self.peek()
+        if tok.type != TokenType.LPAREN:
+            raise SyntaxError(f"Expected '(' after while, line={tok.line} col={tok.col}")
+        self.advance()
 
+        condition = self.parseExpression()
+
+        tok = self.peek()
+        if tok.type != TokenType.RPAREN:
+            raise SyntaxError(f"Expected ')' after condition, line={tok.line} col={tok.col}")
+        self.advance()
+
+        tok = self.peek()
+        if tok.type != TokenType.ARROW:
+            raise SyntaxError(f"Expected '->' after condition, line={tok.line} col={tok.col}")
+        self.advance()
+
+        body = self.parseBlock()
+        self._consumeSeparators()
+
+        return WhileNode(condition=condition, body=body)
+    
     def parseCase(self):
         pass

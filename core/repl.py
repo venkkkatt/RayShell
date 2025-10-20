@@ -8,7 +8,7 @@ from core.expander import Expander
 HISTORYFILE = os.path.expanduser("~/.rayshell_history")
 
 LEXER:bool = False
-PARSER:bool = False
+PARSER:bool = True
 EXECUTOR:bool = True
 ex = Executor()
 
@@ -46,7 +46,7 @@ def repl(cmd: str = None):
     else:
         while True:
             try:
-                line = input("rayshell>")
+                line = input("rayshell> ")
                 saveHistory()
 
             except EOFError:
@@ -121,11 +121,10 @@ def lexerDebug(tokens):
         print(token)
 
 def parserDebug(ast):
-    print ("---PARSER---")
     try:
         saveASTtoJson(ast, os.path.join("", "/home/venkat/rayshell/core/ast.json"))
     except Exception as e:
-        print(f"exception: {e}")
+        pass
 
 def loadHistory():
     if os.path.exists(HISTORYFILE):

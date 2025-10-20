@@ -4,7 +4,7 @@ file.txt
 pyproject.toml
 __init__.py
 test/*
-ast.json
+/core/ast.json
 /build
 /dist
 /rayshell.egg-info
